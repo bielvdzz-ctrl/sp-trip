@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SP Trip 2026 • Carol, Bia & Gabriel</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            display: ['Outfit', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+    .custom-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    @keyframes pop { 0% { transform: scale(.94); } 70% { transform: scale(1.04); } 100% { transform: scale(1); } }
+    .vote-pop { animation: pop .22s ease-out; }
+    @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast-in { animation: toastIn .2s ease-out; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased pb-16">
+
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-sm">SP</div>
+        <div class="min-w-0">
+          <h1 class="font-display font-extrabold text-sm sm:text-lg text-slate-900 truncate">Carol, Bia & Gabriel</h1>
+          <p class="text-[10px] sm:text-[11px] text-slate-500 font-semibold">São Paulo • 09–12 out 2026</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <nav class="flex items-center bg-slate-100 p-1 rounded-xl">
+          <button id="tabPlaces" onclick="switchView('places')" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm">Lugares</button>
+          <button id="tabMatches" onclick="switchView('matches')" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900">
+            🔥 Matches <span id="matchBadge" class="ml-0.5">0</span>
+          </button>
+        </nav>
+        <button onclick="openAddModal()" class="w-8 h-8 sm:w-auto sm:px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5" title="Adicionar lugar">
+          <i data-lucide="plus" class="w-4 h-4"></i><span class="hidden sm:inline">Adicionar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 pt-5">
+    <section id="viewPlaces" class="space-y-4">
+      <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 class="font-display font-extrabold text-base text-slate-900">Onde a gente quer ir?</h2>
+            <p class="text-[11px] text-slate-500 mt-0.5"><span id="placesCount">0</span> lugares • vote no que você toparia</p>
+          </div>
+          <div id="syncStatus" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">● conectado</div>
+        </div>
+
+        <div class="flex gap-1.5 overflow-x-auto custom-scroll pb-2" id="categoryPills">
+          <button data-cat="all" onclick="setCategory('all')" class="cat-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white">Todos <span id="count-all"></span></button>
+          <button data-cat="gastro" onclick="setCategory('gastro')" class="cat-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">🍔 Comida</button>
+          <button data-cat="night" onclick="setCategory('night')" class="cat-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">🏳️‍🌈 Noite</button>
+          <button data-cat="culture" onclick="setCategory('culture')" class="cat-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">🎨 Passeios</button>
+          <button data-cat="cafe" onclick="setCategory('cafe')" class="cat-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">☕ Cafés</button>
+        </div>
+
+        <div class="relative mt-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="searchInput" oninput="applyFilters()" type="search" placeholder="Buscar lugar ou bairro..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-pink-500" />
+        </div>
+      </div>
+
+      <div id="placesContainer" class="space-y-2.5"></div>
+    </section>
+
+    <section id="viewMatches" class="hidden space-y-4">
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
+        <div>
+          <h2 class="font-display font-extrabold text-lg text-slate-900">🔥 Matches do trio</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Entram aqui os lugares com pelo menos 2 votos.</p>
+        </div>
+        <div class="text-right">
+          <div id="matchesCountBig" class="font-display font-extrabold text-2xl text-pink-600">0</div>
+          <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">aprovados</div>
+        </div>
+      </div>
+      <div id="matchesContainer" class="space-y-2.5"></div>
+    </section>
+  </main>
+
+  <div id="addModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm p-4 items-center justify-center">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-display font-extrabold text-lg text-slate-900">Adicionar lugar</h3>
+          <p class="text-[11px] text-slate-500">Só o básico. Dá para editar depois na planilha.</p>
+        </div>
+        <button onclick="closeAddModal()" class="p-1.5 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleAddPlace(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nome *</label>
+          <input id="newName" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-pink-500" placeholder="Ex.: Museu, bar, restaurante...">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Categoria</label>
+            <select id="newCategory" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+              <option value="gastro">🍔 Comida</option>
+              <option value="night">🏳️‍🌈 Noite</option>
+              <option value="culture">🎨 Passeio</option>
+              <option value="cafe">☕ Café</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Bairro *</label>
+            <input id="newRegion" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs" placeholder="Pinheiros">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Observação</label>
+          <input id="newHighlight" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs" placeholder="Por que vale a pena?">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-xs font-bold text-slate-500">Cancelar</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white rounded-xl">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="toast-in bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap" id="toastText">Salvo!</div>
+  </div>
+
+  <script>
+    const DEFAULT_PLACES = [
+      // === GASTRONOMIA UNIVERSITÁRIA & ÍCONES ===
+      {
+        id: 'mequi1000',
+        name: 'Méqui 1000 (Casarão Histórico da Paulista)',
+        category: 'gastro',
+        region: 'Paulista',
+        price: '$',
+        priceTag: 'R$ 20 - R$ 45',
+        highlight: 'Aberto 24h & Esteira de Lanches',
+        tip: 'Lindo casarão iluminado na Paulista, esteira rolante de hambúrguer e aberto 24h.',
+        mapsUrl: 'https://maps.google.com/?q=Mequi+1000+Av+Paulista'
+      },
+      {
+        id: 'laguapa',
+        name: 'La Guapa Empanadas (Paola Carosella)',
+        category: 'gastro',
+        region: 'Paulista',
+        price: '$',
+        priceTag: 'R$ 12 - R$ 16 cada',
+        highlight: 'Empanadas Artesanais Premiadas',
+        tip: 'Massa tostadinha artesanal impecável. Peça a de cebola caramelizada e a Salteña.',
+        mapsUrl: 'https://maps.google.com/?q=La+Guapa+Empanadas+Paulista'
+      },
+      {
+        id: 'thaichef',
+        name: 'Thai Chef (Restaurante Tailandês Liberdade)',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$$',
+        priceTag: 'R$ 38 - R$ 65 (Farto)',
+        highlight: 'Pad Thai Autêntico & Aromático',
+        tip: 'Porções muito fartas que dão tranquilamente para dividir.',
+        mapsUrl: 'https://maps.google.com/?q=Restaurante+Thai+Chef+Liberdade'
+      },
+      {
+        id: 'ronghe',
+        name: 'Rong He (Massa Chinesa Esticada na Hora)',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$$',
+        priceTag: 'R$ 35 - R$ 55 (Enorme)',
+        highlight: 'Show do Macarrão na Vitrine & Guiozas',
+        tip: 'Um prato de macarrão frito serve facilmente 2 a 3 pessoas!',
+        mapsUrl: 'https://maps.google.com/?q=Rong+He+Liberdade'
+      },
+      {
+        id: 'askalamen',
+        name: 'Aska Lamen (O Mais Barato de SP)',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$',
+        priceTag: 'R$ 28 - R$ 38',
+        highlight: 'Lamen Tradicional Raiz',
+        tip: 'Super barato e autêntico. Não aceita cartão (apenas dinheiro/PIX).',
+        mapsUrl: 'https://maps.google.com/?q=Aska+Lamen+Liberdade'
+      },
+      {
+        id: 'leiteriaita',
+        name: 'Leiteria Ita (PF Histórico desde 1953)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'R$ 24 - R$ 35 (PF Farto)',
+        highlight: 'O Prato Feito Mais Amado do Centro',
+        tip: 'Polpetone, filé de peixe ou bife a cavalo com arroz, feijão e fritas caseiras.',
+        mapsUrl: 'https://maps.google.com/?q=Leiteria+Ita+Sao+Paulo'
+      },
+      {
+        id: 'merendadacidade',
+        name: 'Merenda da Cidade (Janaína & Jefferson Rueda)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$$',
+        priceTag: 'R$ 49 (Menu Completo + Doce)',
+        highlight: 'Comida de Chef Farta & Acessível',
+        tip: 'Bandejão afetivo maravilhoso com prato do dia, sobremesa e refresco inclusos.',
+        mapsUrl: 'https://maps.google.com/?q=Merenda+da+Cidade+Sao+Paulo'
+      },
+      {
+        id: 'popvegan',
+        name: 'Pop Vegan Food (Consolação / Augusta)',
+        category: 'gastro',
+        region: 'Augusta / Frei Caneca',
+        price: '$',
+        priceTag: 'Almoço R$ 18 - R$ 22 (Buffet Livre)',
+        highlight: 'Buffet Livre Barato & Pizzas à Noite',
+        tip: 'O restaurante vegano e universitário mais barato de SP. À noite tem pizzas por R$ 35.',
+        mapsUrl: 'https://maps.google.com/?q=Pop+Vegan+Food+Consolacao'
+      },
+      {
+        id: 'momolamen',
+        name: 'Momo Lamen (Lamen Shop Moderno)',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$$',
+        priceTag: 'R$ 38 - R$ 52',
+        highlight: 'Ambiente Confortável & Frango Karaague',
+        tip: 'Ótimo para almoço com ar condicionado e porção de frango crocante.',
+        mapsUrl: 'https://maps.google.com/?q=Momo+Lamen+Liberdade'
+      },
+      {
+        id: 'porquesim',
+        name: 'Porque Sim (Karaokê Box Privativo & Lamen)',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$',
+        priceTag: 'R$ 25 - R$ 45',
+        highlight: 'Salinhas Privativas de Karaokê + Comida Japonesa',
+        tip: 'Cantar com as amigas nas salinhas fechadas comendo petiscos.',
+        mapsUrl: 'https://maps.google.com/?q=Porque+Sim+Karaoke+Liberdade'
+      },
+      {
+        id: 'eatasia',
+        name: 'Eat Asia + Hello Kitty Oficial',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$',
+        priceTag: 'R$ 25 - R$ 45',
+        highlight: 'Burgers com Carimbo da Hello Kitty',
+        tip: 'Espaço temático ultra fofo e instagramável com burgers de Wagyu acessíveis.',
+        mapsUrl: 'https://maps.google.com/?q=Eat+Asia+Hello+Kitty+Liberdade'
+      },
+      {
+        id: 'estadao',
+        name: 'Bar e Lanches Estadão (Pernil 24h)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'R$ 28 - R$ 38',
+        highlight: 'O Sanduíche de Pernil Mais Famoso de SP',
+        tip: 'Balcão histórico de inox no Centro, clássico no pós-balada.',
+        mapsUrl: 'https://maps.google.com/?q=Bar+e+Lanches+Estadao+Sao+Paulo'
+      },
+      {
+        id: 'bellapaulista',
+        name: 'Padaria Bella Paulista (Mega Padaria 24h)',
+        category: 'gastro',
+        region: 'Paulista',
+        price: '$$',
+        priceTag: 'R$ 25 - R$ 60',
+        highlight: 'Sopas no Pão Italiano & Doces',
+        tip: 'Aberta 24h com buffet de café, coxinhas gourmets e doces.',
+        mapsUrl: 'https://maps.google.com/?q=Padaria+Bella+Paulista'
+      },
+      {
+        id: 'santatereza',
+        name: 'Padaria Santa Tereza (Desde 1872)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'R$ 15 - R$ 35',
+        highlight: 'A Mais Antiga de SP & Coxa Creme Lendária',
+        tip: 'A padaria mais antiga do Brasil, famosa pela Coxa Creme.',
+        mapsUrl: 'https://maps.google.com/?q=Padaria+Santa+Tereza+Sao+Paulo'
+      },
+      {
+        id: 'casagodinho',
+        name: 'Casa Godinho (A Melhor Empada de SP - 1888)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'R$ 12 - R$ 16 por empada',
+        highlight: 'Empada de Palmito e Bacalhau Histórica',
+        tip: 'Empório clássico tombado pelo patrimônio histórico com a empada mais premiada de SP.',
+        mapsUrl: 'https://maps.google.com/?q=Casa+Godinho+Sao+Paulo'
+      },
+      {
+        id: 'pasteldamaria',
+        name: 'Pastel de Feira da Liberdade / Pacaembu',
+        category: 'gastro',
+        region: 'Paulista',
+        price: '$',
+        priceTag: 'R$ 10 - R$ 18',
+        highlight: 'Pastel Gigante com Caldo de Cana',
+        tip: 'Pastel sequinho de carne com queijo e caldo de cana com limão.',
+        mapsUrl: 'https://maps.google.com/?q=Pastel+da+Maria+Sao+Paulo'
+      },
+      {
+        id: 'mercadomunicipal',
+        name: 'Mercado Municipal de SP (Mercadão)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$$',
+        priceTag: 'R$ 35 - R$ 55 (Gigante)',
+        highlight: 'Sanduíche de Mortadela & Vitrais',
+        tip: 'Sanduíche gigante que alimenta 2 a 3 pessoas!',
+        mapsUrl: 'https://maps.google.com/?q=Mercado+Municipal+de+Sao+Paulo'
+      },
+      {
+        id: 'brazelettrica',
+        name: 'Bráz Elettrica (Pizza Napolitana Rápida)',
+        category: 'gastro',
+        region: 'Paulista',
+        price: '$$',
+        priceTag: 'R$ 35 - R$ 48',
+        highlight: 'Pizza Individual em 90s & Chopp',
+        tip: 'Massa leve de fermentação natural na Rua Augusta e Pinheiros.',
+        mapsUrl: 'https://maps.google.com/?q=Braz+Elettrica+Augusta'
+      },
+      {
+        id: 'castroburger',
+        name: 'Castro Burger (Hamburgueria Temática LGBT+)',
+        category: 'gastro',
+        region: 'Ibirapuera / Sul',
+        price: '$$',
+        priceTag: 'R$ 32 - R$ 52',
+        highlight: '100% LGBT+ Friendly, Burgers & Drinks',
+        tip: 'Inspirada no bairro gay Castro de San Francisco. Rua cheia de barzinhos.',
+        mapsUrl: 'https://maps.google.com/?q=Castro+Burger+Vila+Mariana'
+      },
+      {
+        id: 'zdeli',
+        name: 'Z Deli Sandwich Shop (Pastrami & Fritas)',
+        category: 'gastro',
+        region: 'Vila Madalena / Pinheiros',
+        price: '$$',
+        priceTag: 'R$ 38 - R$ 62',
+        highlight: 'Batata com Alecrim & Pastrami Artesanal',
+        tip: 'A porção de Pastrami Fries é perfeita para dividir no trio.',
+        mapsUrl: 'https://maps.google.com/?q=Z+Deli+Sandwich+Shop+Pinheiros'
+      },
+      {
+        id: 'patties',
+        name: 'Patties Burger (Ultra Smash Retrô Baratinho)',
+        category: 'gastro',
+        region: 'Paulista',
+        price: '$',
+        priceTag: 'R$ 16 - R$ 26',
+        highlight: 'Smash Fininho & Crocante',
+        tip: 'Caixinhas retrô colecionáveis e preço super amigo.',
+        mapsUrl: 'https://maps.google.com/?q=Patties+Burger+Sao+Paulo'
+      },
+      {
+        id: 'atzitacos',
+        name: 'Atzi Taquería / Los Dos (Tacos de Rua Mexicanos)',
+        category: 'gastro',
+        region: 'Vila Madalena / Pinheiros',
+        price: '$',
+        priceTag: 'R$ 14 - R$ 22 por taco',
+        highlight: 'Tacos Autênticos de Milho com Abacaxi',
+        tip: 'Tacos al pastor feitos na hora com tortilha fresca.',
+        mapsUrl: 'https://maps.google.com/?q=Atzi+Taqueria+Pinheiros'
+      },
+      {
+        id: 'famigliamancini',
+        name: 'Famiglia Mancini (Rua Iluminada do Bixiga)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$$',
+        priceTag: 'R$ 60 - R$ 85 (Travessa p/ 3)',
+        highlight: 'Rua Cenográfica Estilo Filme & Massas Fartas',
+        tip: 'Uma única travessa de lasanha ou nhoque alimenta o trio inteiro.',
+        mapsUrl: 'https://maps.google.com/?q=Famiglia+Mancini+Sao+Paulo'
+      },
+      {
+        id: 'kintarobar',
+        name: 'Izakaya Kintaro (Boteco Japonês Raiz)',
+        category: 'gastro',
+        region: 'Liberdade',
+        price: '$',
+        priceTag: 'Petiscos R$ 10 - R$ 20',
+        highlight: 'Petiscos no Balcão & Cerveja Gelada',
+        tip: 'Comandado por lutadores de sumô, clima acolhedor e petiscos autênticos.',
+        mapsUrl: 'https://maps.google.com/?q=Izakaya+Kintaro+Liberdade'
+      },
+      {
+        id: 'pontochic',
+        name: 'Ponto Chic (O Criador do Bauru Original)',
+        category: 'gastro',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'R$ 28 - R$ 38',
+        highlight: 'O Bauru Original com 4 Queijos Fundidos',
+        tip: 'O sanduíche histórico original com rosbife, tomate, picles e blend de queijos.',
+        mapsUrl: 'https://maps.google.com/?q=Ponto+Chic+Paissandu'
+      },
+
+      // === NOITE, BARES & BALADAS LGBT+ ===
+      {
+        id: 'zigclub',
+        name: 'Zig Club & Zig Duplex (A Queridinha LGBT+)',
+        category: 'night',
+        region: 'Centro / República',
+        price: '$$',
+        priceTag: 'Entrada: R$ 30 - R$ 50',
+        highlight: 'Pop, Funk, Indie & Clima Super Livre',
+        tip: 'Compre ingresso antecipado no Sympla/Shotgun para pagar mais barato.',
+        mapsUrl: 'https://maps.google.com/?q=Zig+Club+Sao+Paulo'
+      },
+      {
+        id: 'yachtclub',
+        name: 'Club Yacht (Bela Vista)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$$',
+        priceTag: 'Entrada: R$ 35 - R$ 60',
+        highlight: 'Noite das Divas Pop & Tema Náutico',
+        tip: 'Sets dedicados a divas pop (Beyoncé, Gaga, Charli xcx, Dua Lipa).',
+        mapsUrl: 'https://maps.google.com/?q=Club+Yacht+Sao+Paulo'
+      },
+      {
+        id: 'casofluida',
+        name: 'Casa Fluida (Espaço Cultural LGBT+ & Drags)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$',
+        priceTag: 'Entrada R$ 15 - R$ 30',
+        highlight: 'Exposições, Gastronomia & Shows de Drag',
+        tip: 'Espaço multifuncional acolhedor e seguro na Rua Bela Cintra com drinks incríveis.',
+        mapsUrl: 'https://maps.google.com/?q=Casa+Fluida+Bela+Cintra'
+      },
+      {
+        id: 'ayebar',
+        name: 'AYÊ Bar (Pinheiros - Brasilidades & Axé)',
+        category: 'night',
+        region: 'Vila Madalena / Pinheiros',
+        price: '$',
+        priceTag: 'Entrada R$ 15 - R$ 25',
+        highlight: 'Samba, Pagode & Axé Seguro para LGBT+',
+        tip: 'Happy hour na Rua Mourato Coelho que ferve e vira baladinha de brasilidades.',
+        mapsUrl: 'https://maps.google.com/?q=Aye+Bar+Pinheiros'
+      },
+      {
+        id: 'bardas',
+        name: 'bar Das (Pinheiros - Feito por e para Mulheres)',
+        category: 'night',
+        region: 'Vila Madalena / Pinheiros',
+        price: '$$',
+        priceTag: 'Drinks R$ 28 - R$ 38',
+        highlight: 'Espaço Seguro p/ Lésbicas, Bi e Pessoas Trans',
+        tip: 'Coquetelaria autoral impecável e clima aconchegante para bater papo e paquerar.',
+        mapsUrl: 'https://maps.google.com/?q=bar+Das+Pinheiros'
+      },
+      {
+        id: 'torneirabar',
+        name: 'Torneira Bar (Chopps Artesanais & Inclusão)',
+        category: 'night',
+        region: 'Vila Madalena / Pinheiros',
+        price: '$',
+        priceTag: 'Chopp R$ 14 - R$ 22',
+        highlight: 'Equipe 100% Trans/Não-binária & Petiscos',
+        tip: 'Bar super gostoso em Pinheiros com chopps locais artesanais e comida inclusiva.',
+        mapsUrl: 'https://maps.google.com/?q=Torneira+Bar+Pinheiros'
+      },
+      {
+        id: 'alokaclub',
+        name: 'A Lôca Club (A Mais Tradicional da Frei Caneca)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$',
+        priceTag: 'Entrada R$ 25 - R$ 40',
+        highlight: 'História da Noite Gay & Shows de Drags',
+        tip: 'No coração da Frei Caneca com DJs, pop, eletrônico e shows icônicos.',
+        mapsUrl: 'https://maps.google.com/?q=A+Loca+Club+Frei+Caneca'
+      },
+      {
+        id: 'katklub',
+        name: 'Kat Klub (Rua Augusta - 2 Pistas)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$$',
+        priceTag: 'Entrada R$ 30 - R$ 50',
+        highlight: 'Decoração Futurista & Pistas Pop/Funk/Eletrônico',
+        tip: 'Balada moderna no Baixo Augusta com iluminação futurista e público jovem.',
+        mapsUrl: 'https://maps.google.com/?q=Kat+Klub+Rua+Augusta'
+      },
+      {
+        id: 'tokyobar',
+        name: 'Tokyo 東亰 (Prédio de 9 Andares com Karaokê)',
+        category: 'night',
+        region: 'Centro / República',
+        price: '$$',
+        priceTag: 'Entrada: R$ 35 - R$ 55',
+        highlight: 'Karaokê Coletivo + Pista no Rooftop com Vista do Copan',
+        tip: 'Chegue no entardecer para pegar o pôr do sol no rooftop.',
+        mapsUrl: 'https://maps.google.com/?q=Tokyo+011+Sao+Paulo'
+      },
+      {
+        id: 'augustabar',
+        name: 'Esquenta na Rua Augusta & Frei Caneca (Bar Crawl)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$',
+        priceTag: 'Litrão R$ 14 - R$ 18',
+        highlight: 'Bares Baratos de Calçada & Pegação',
+        tip: 'Comece no "Bar do Baixo" ou "Augusta 472" para tomar litrão barato.',
+        mapsUrl: 'https://maps.google.com/?q=Rua+Augusta+Sao+Paulo'
+      },
+      {
+        id: 'igrejinha',
+        name: 'Igrejinha Bar (Ambiente Vintage & Drinks)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$$',
+        priceTag: 'Drinks R$ 28 - R$ 38',
+        highlight: 'Sofás Retrô, Luz Vermelha & Público LGBT+',
+        tip: 'Ótimo lugar para bater papo e beber bons drinks no início da noite.',
+        mapsUrl: 'https://maps.google.com/?q=Igrejinha+Bar+Consolacao'
+      },
+      {
+        id: 'bluespace',
+        name: 'Blue Space (Shows Históricos de Drag Queens)',
+        category: 'night',
+        region: 'Barra Funda',
+        price: '$$',
+        priceTag: 'Entrada R$ 40 - R$ 60',
+        highlight: 'O Templo das Maiores Drags do Brasil',
+        tip: 'Se vocês gostam de Drag Race, esse é o lugar sagrado para se emocionar.',
+        mapsUrl: 'https://maps.google.com/?q=Blue+Space+Barra+Funda'
+      },
+      {
+        id: 'blitzhaus',
+        name: 'Blitz Haus (Augusta - 3 Andares com Fliperama)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$',
+        priceTag: 'Entrada R$ 25 - R$ 45',
+        highlight: 'Fliperamas Liberados & Pista Pop/Funk',
+        tip: 'Fliperamas clássicos liberados no térreo e balada nos outros andares.',
+        mapsUrl: 'https://maps.google.com/?q=Blitz+Haus+Rua+Augusta'
+      },
+
+      {
+        id: 'madameclub',
+        name: 'Madame Underground Club (O Casarão Mais Antigo)',
+        category: 'night',
+        region: 'Augusta / Frei Caneca',
+        price: '$$',
+        priceTag: 'Entrada R$ 35 - R$ 50',
+        highlight: 'Casarão Gótico/Rock Histórico desde 1982',
+        tip: 'Labirinto com várias salas temáticas e pista anos 80/synthwave.',
+        mapsUrl: 'https://maps.google.com/?q=Madame+Underground+Club'
+      },
+      {
+        id: 'dedge',
+        name: 'D-Edge (Música Eletrônica & Túnel de LED)',
+        category: 'night',
+        region: 'Barra Funda',
+        price: '$$$',
+        priceTag: 'Entrada R$ 60 - R$ 100',
+        highlight: 'Arquitetura de LED Futurista & Som Impecável',
+        tip: 'Referência mundial em house e techno se curtirem eletrônico.',
+        mapsUrl: 'https://maps.google.com/?q=D-Edge+Sao+Paulo'
+      },
+      {
+        id: 'pracaroosevelt',
+        name: 'Praça Roosevelt (Bares Universitários na Calçada)',
+        category: 'night',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'Litrão R$ 12 - R$ 16',
+        highlight: 'Mesas ao Ar Livre & Clima Boêmio Universitário',
+        tip: 'Ótimo para sentar sem pressa no entardecer.',
+        mapsUrl: 'https://maps.google.com/?q=Praca+Franklin+Roosevelt'
+      },
+
+      // === PASSEIOS, CULTURA, PARQUES & MIRANTES ===
+      {
+        id: 'sescpaulista',
+        name: 'Sesc Avenida Paulista • Café/Terraço',
+        category: 'culture',
+        region: 'Paulista',
+        price: 'gratis',
+        priceTag: 'Acesso gratuito',
+        highlight: 'Mirante temporariamente fechado por reforma',
+        tip: 'Em setembro/2026 o Mirante segue com agendamento suspenso; Café Terraço e Comedoria continuam funcionando. Reconfirmem perto da viagem.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sesc+Avenida+Paulista',
+        sourceUrl: 'https://www.sescsp.org.br/editorial/mirante-fechado-temporariamente-para-reformas-a-partir-de-maio/',
+        bestDay: 'sex-dom',
+        status: 'verificar'
+      },
+      {
+        id: 'masp',
+        name: 'MASP • Museu de Arte de São Paulo',
+        category: 'culture',
+        region: 'Paulista',
+        price: '$$$',
+        priceTag: 'R$ 85 inteira • R$ 42 meia',
+        highlight: 'Sexta grátis das 18h às 21h',
+        tip: 'A viagem começa numa sexta: é uma ótima janela para economizar. O agendamento online é obrigatório inclusive na gratuidade. Segunda-feira fechado.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=MASP+Sao+Paulo',
+        sourceUrl: 'https://masp.org.br/visite',
+        bestDay: '09/10',
+        status: 'verificado'
+      },
+      {
+        id: 'imspaulista',
+        name: 'IMS Paulista (Instituto Moreira Salles)',
+        category: 'culture',
+        region: 'Paulista',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Prédio Moderno de Fotografia & Vista',
+        tip: 'Escada rolante panorâmica linda para fotos e entrada franca.',
+        mapsUrl: 'https://maps.google.com/?q=IMS+Paulista+Sao+Paulo'
+      },
+      {
+        id: 'casadasrosas',
+        name: 'Casa das Rosas (Mansão Histórica & Jardim)',
+        category: 'culture',
+        region: 'Paulista',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Casarão dos Barões do Café na Paulista',
+        tip: 'Jardins de roseiras e cafeteria charmosa.',
+        mapsUrl: 'https://maps.google.com/?q=Casa+das+Rosas+Av+Paulista'
+      },
+      {
+        id: 'japanhousesp',
+        name: 'Japan House São Paulo (Arte & Design)',
+        category: 'culture',
+        region: 'Paulista',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Fachada de Madeira Hinoki Japonesa',
+        tip: 'Exposições imersivas gratuitas no começo da Paulista.',
+        mapsUrl: 'https://maps.google.com/?q=Japan+House+Sao+Paulo'
+      },
+      {
+        id: 'paulistaaberta',
+        name: 'Paulista Aberta aos Pedestres',
+        category: 'culture',
+        region: 'Paulista',
+        price: 'gratis',
+        priceTag: 'Gratuito',
+        highlight: 'Domingos e feriados • ótima para 11/10',
+        tip: 'No calendário da viagem, 11/10 é domingo e 12/10 é feriado. Confirmem o horário operacional na semana da viagem.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Avenida+Paulista+Sao+Paulo',
+        sourceUrl: 'https://www.paulistaaberta.minhasampa.org.br/',
+        bestDay: '11/10',
+        status: 'verificado'
+      },
+      {
+        id: 'ibirapuera',
+        name: 'Parque Ibirapuera & Marquise Niemeyer',
+        category: 'culture',
+        region: 'Ibirapuera / Sul',
+        price: 'gratis',
+        priceTag: 'Parque Grátis',
+        highlight: 'Lagos, Piquenique & Aluguel de Bike',
+        tip: 'Levem canga para deitar na grama no pôr do sol.',
+        mapsUrl: 'https://maps.google.com/?q=Parque+Ibirapuera+Sao+Paulo'
+      },
+      {
+        id: 'macusp',
+        name: 'MAC USP (Terraço Panorâmico Grátis)',
+        category: 'culture',
+        region: 'Ibirapuera / Sul',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Mirante 360° do Ibirapuera e do Skyline',
+        tip: 'Subam até o 8º andar para ver a vista aérea sem pagar nada.',
+        mapsUrl: 'https://maps.google.com/?q=MAC+USP+Ibirapuera'
+      },
+      {
+        id: 'becodobatman',
+        name: 'Beco do Batman & Vila Madalena',
+        category: 'culture',
+        region: 'Vila Madalena / Pinheiros',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Galeria a Céu Aberto de Grafites',
+        tip: 'Cenário perfeito para tirar dezenas de fotos legais.',
+        mapsUrl: 'https://maps.google.com/?q=Beco+do+Batman+Vila+Madalena'
+      },
+      {
+        id: 'pracapordosol',
+        name: 'Praça do Pôr do Sol (Alto de Pinheiros)',
+        category: 'culture',
+        region: 'Vila Madalena / Pinheiros',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'O Pôr do Sol Mais Famoso e Aplaudido de SP',
+        tip: 'Levem bebidas, canga e salgadinhos para ver o entardecer no gramado.',
+        mapsUrl: 'https://maps.google.com/?q=Praca+do+Por+do+Sol+Pinheiros'
+      },
+      {
+        id: 'liberdadebairro',
+        name: 'Bairro da Liberdade (Feirinha & Comprinhas)',
+        category: 'culture',
+        region: 'Liberdade',
+        price: 'gratis',
+        priceTag: 'Passeio Grátis',
+        highlight: 'Postes Vermelhos, Mercadinhos & Jardim Oriental',
+        tip: 'Comer morango com chocolate no palito e pãozinho recheado.',
+        mapsUrl: 'https://maps.google.com/?q=Praca+da+Liberdade+Sao+Paulo'
+      },
+      {
+        id: 'galeriasogo',
+        name: 'Galeria SoGo Plaza (Animes & K-Pop)',
+        category: 'culture',
+        region: 'Liberdade',
+        price: 'gratis',
+        priceTag: 'Entrada Grátis',
+        highlight: '4 Andares de Produtos Geek, K-Pop e Fofuras',
+        tip: 'Ótimo para lembrancinhas e photocards.',
+        mapsUrl: 'https://maps.google.com/?q=Sogo+Plaza+Shopping+Liberdade'
+      },
+      {
+        id: 'pinacoteca',
+        name: 'Pinacoteca de São Paulo • Pina Luz + Contemporânea',
+        category: 'culture',
+        region: 'Luz / Bom Retiro',
+        price: '$$',
+        priceTag: 'R$ 40 inteira • R$ 20 meia',
+        highlight: 'Grátis sábado e no 2º domingo do mês',
+        tip: 'Vocês deram sorte: 10/10 é sábado e 11/10 é o segundo domingo de outubro — ambos entram nas gratuidades atuais.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Pinacoteca+de+Sao+Paulo',
+        sourceUrl: 'https://pinacoteca.org.br/visita/ingresso/',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'sesc24demaio',
+        name: 'Sesc 24 de Maio (Paulo Mendes da Rocha)',
+        category: 'culture',
+        region: 'Centro / República',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Rampas Modernistas, Café Barato & Piscina no Topo',
+        tip: 'Prédio cultural incrível no Centro com café muito barato e vista da cidade.',
+        mapsUrl: 'https://maps.google.com/?q=Sesc+24+de+Maio'
+      },
+      {
+        id: 'copan',
+        name: 'Edifício Copan & Café Floresta',
+        category: 'culture',
+        region: 'Centro / República',
+        price: 'gratis',
+        priceTag: 'Passeio Grátis',
+        highlight: 'Prédio Ondulado de Oscar Niemeyer',
+        tip: 'Tomar café no coador de pano no Café Floresta no térreo.',
+        mapsUrl: 'https://maps.google.com/?q=Edificio+Copan+Sao+Paulo'
+      },
+      {
+        id: 'farolsantander',
+        name: 'Farol Santander (Antigo Banespa)',
+        category: 'culture',
+        region: 'Centro / República',
+        price: '$$',
+        priceTag: 'R$ 17,50 meia',
+        highlight: 'Mirante no 26º Andar & Pista de Skate Interna',
+        tip: 'Vista 360° do centro histórico.',
+        mapsUrl: 'https://maps.google.com/?q=Farol+Santander+Sao+Paulo'
+      },
+      {
+        id: 'ccbbsp',
+        name: 'CCBB São Paulo (Centro Cultural Banco do Brasil)',
+        category: 'culture',
+        region: 'Centro / República',
+        price: 'gratis',
+        priceTag: '100% Gratuito',
+        highlight: 'Edifício Histórico de 1901 & Exposições Imersivas',
+        tip: 'Entrada franca no coração do centro antigo perto do Pátio do Colégio.',
+        mapsUrl: 'https://maps.google.com/?q=CCBB+Sao+Paulo'
+      },
+      {
+        id: 'galeriadorock',
+        name: 'Galeria do Rock (Centro)',
+        category: 'culture',
+        region: 'Centro / República',
+        price: 'gratis',
+        priceTag: 'Entrada Grátis',
+        highlight: '4 Andares de Moda Street, Vinis & Sneakers',
+        tip: 'Terraço comunitário no último andar.',
+        mapsUrl: 'https://maps.google.com/?q=Galeria+do+Rock+Sao+Paulo'
+      },
+
+      // === CAFÉS, DOCES, CONFEITARIAS & EXPERIÊNCIAS ===
+      {
+        id: 'wecoffee',
+        name: 'We Coffee (O Café Futurista)',
+        category: 'cafe',
+        region: 'Liberdade',
+        price: '$$',
+        priceTag: 'Doces R$ 22 - R$ 36',
+        highlight: 'Doces Esculturais e Salty Cream Shakes',
+        tip: 'Bebidas com creme salgado e doces em formato de joias.',
+        mapsUrl: 'https://maps.google.com/?q=We+Coffee+Liberdade'
+      },
+      {
+        id: 'eightynine',
+        name: '89°C Coffee Station (Liberdade)',
+        category: 'cafe',
+        region: 'Liberdade',
+        price: '$',
+        priceTag: 'Doces R$ 14 - R$ 26',
+        highlight: 'Choux Cream Crocante & Matcha Gelado',
+        tip: 'O Choux Cream de baunilha é imperdível e baratinho.',
+        mapsUrl: 'https://maps.google.com/?q=89+Coffee+Station+Liberdade'
+      },
+      {
+        id: 'pikurruchas',
+        name: 'Pikurrucha\'s (A Confeitaria Mais Rosa de SP)',
+        category: 'cafe',
+        region: 'Paulista',
+        price: '$$',
+        priceTag: 'R$ 22 - R$ 38',
+        highlight: 'Decoração Cor de Rosa Ultra Instagramável & Bolos Vulcão',
+        tip: 'Paraíso de fotos com cenários fofos, brigadeiros de panela e taças cheias de doce.',
+        mapsUrl: 'https://maps.google.com/?q=Pikurruchas+Jardins'
+      },
+      {
+        id: 'coffeelab',
+        name: 'Coffee Lab (Vila Madalena)',
+        category: 'cafe',
+        region: 'Vila Madalena / Pinheiros',
+        price: '$$',
+        priceTag: 'R$ 16 - R$ 32',
+        highlight: 'Quintal com Deck & Cafés Especiais',
+        tip: 'Sente no quintal aberto e peça o café com brigadeiro.',
+        mapsUrl: 'https://maps.google.com/?q=Coffee+Lab+Vila+Madalena'
+      },
+      {
+        id: 'sorveteriadocentro',
+        name: 'Sorveteria do Centro (Jefferson Rueda)',
+        category: 'cafe',
+        region: 'Centro / República',
+        price: '$',
+        priceTag: 'R$ 15 - R$ 22',
+        highlight: 'Sorvetes Artesanais Inovadores',
+        tip: 'Casquinhas com sabores brasileiros perto do Copan.',
+        mapsUrl: 'https://maps.google.com/?q=Sorveteria+do+Centro+Sao+Paulo'
+      },
+      {
+        id: 'snowfall',
+        name: 'Snow Fall (Bingsu Neve de Leite Coreana)',
+        category: 'cafe',
+        region: 'Liberdade',
+        price: '$$',
+        priceTag: 'R$ 28 - R$ 42 (p/ 3)',
+        highlight: 'Neve de Leite com Morango & Nutella',
+        tip: 'Uma taça média dá para o trio inteiro dividir tranquilamente!',
+        mapsUrl: 'https://maps.google.com/?q=Snowfall+Liberdade'
+      },
+      {
+        id: 'thecoffee',
+        name: 'The Coffee (Minimalismo To-Go Japonês)',
+        category: 'cafe',
+        region: 'Paulista',
+        price: '$',
+        priceTag: 'Cafés R$ 9 - R$ 18',
+        highlight: 'Cafeterias Compactas Inspiradas em Tóquio',
+        tip: 'Peça o Vanilla Iced Latte ou Chai Latte pelo tablet na calçada.',
+        mapsUrl: 'https://maps.google.com/?q=The+Coffee+Av+Paulista'
+      },
+      {
+        id: 'bubbletea',
+        name: 'Bubblekill / Bubble Tea (Liberdade & Paulista)',
+        category: 'cafe',
+        region: 'Liberdade',
+        price: '$',
+        priceTag: 'R$ 16 - R$ 24',
+        highlight: 'Chás Gelados com Bolhas que Estouram',
+        tip: 'Super refrescante para andar na feira.',
+        mapsUrl: 'https://maps.google.com/?q=Bubblekill+Liberdade'
+      },
+      {
+        id: 'baciodilatte',
+        name: 'Bacio di Latte (Jardins Concept Store)',
+        category: 'cafe',
+        region: 'Paulista',
+        price: '$$',
+        priceTag: 'R$ 18 - R$ 28',
+        highlight: 'Gelato Italiano com Calda Quente de Pistache',
+        tip: 'Peça calda de pistache dentro da casquinha na Oscar Freire.',
+        mapsUrl: 'https://maps.google.com/?q=Bacio+di+Latte+Oscar+Freire'
+      },
+
+      // === ADIÇÕES IMPORTANTES • REVISÃO SET/2026 ===
+      {
+        id: 'museulinguaportuguesa',
+        name: 'Museu da Língua Portuguesa',
+        category: 'culture',
+        region: 'Luz / Bom Retiro',
+        price: '$$',
+        priceTag: 'R$ 25 inteira • R$ 12,50 meia',
+        highlight: 'Grátis aos domingos',
+        tip: 'Domingo 11/10 encaixa muito bem com Luz e Pinacoteca. Fecha às segundas.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Museu+da+Lingua+Portuguesa',
+        sourceUrl: 'https://www.museudalinguaportuguesa.org.br/visite/horarios-e-ingressos/',
+        bestDay: '11/10',
+        status: 'verificado'
+      },
+      {
+        id: 'museudiversidadesexual',
+        name: 'Museu da Diversidade Sexual',
+        category: 'culture',
+        region: 'República / Centro',
+        price: 'gratis',
+        priceTag: 'Entrada gratuita',
+        highlight: 'Museu LGBTQIA+ dentro da Estação República',
+        tip: 'Boa combinação com Copan, Arouche e centro. Funciona de terça a domingo; segunda fechado.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Museu+da+Diversidade+Sexual+Sao+Paulo',
+        sourceUrl: 'https://www.museudadiversidadesexual.org.br/infra-servicos',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'ccsp',
+        name: 'Centro Cultural São Paulo • CCSP',
+        category: 'culture',
+        region: 'Vergueiro / Paraíso',
+        price: 'gratis',
+        priceTag: 'Grande parte gratuita',
+        highlight: 'Jardim suspenso, exposições, cinema e programação cultural',
+        tip: 'Excelente plano B de chuva e fica colado ao metrô Vergueiro.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+Cultural+Sao+Paulo',
+        sourceUrl: 'https://centrocultural.sp.gov.br/visite/',
+        bestDay: '09/10',
+        status: 'verificado'
+      },
+      {
+        id: 'museufutebol',
+        name: 'Museu do Futebol • Pacaembu',
+        category: 'culture',
+        region: 'Pacaembu',
+        price: '$$',
+        priceTag: 'R$ 25 inteira • R$ 12,50 meia',
+        highlight: 'Museu interativo renovado',
+        tip: 'Fecha às segundas. Dá para combinar com Higienópolis ou seguir para Pinheiros.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Museu+do+Futebol+Pacaembu',
+        sourceUrl: 'https://museudofutebol.org.br/horarios-e-ingressos/',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'tomieohtake',
+        name: 'Instituto Tomie Ohtake',
+        category: 'culture',
+        region: 'Pinheiros',
+        price: 'gratis',
+        priceTag: 'Exposições geralmente gratuitas',
+        highlight: 'Arte contemporânea + prédio icônico',
+        tip: 'Ótimo para encaixar no mesmo bloco de Mercado de Pinheiros, Vila Madalena e Beco do Batman.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Instituto+Tomie+Ohtake',
+        bestDay: '10/10 ou 11/10',
+        status: 'verificar'
+      },
+      {
+        id: 'mercadopinheiros',
+        name: 'Mercado Municipal de Pinheiros',
+        category: 'gastro',
+        region: 'Pinheiros',
+        price: '$$',
+        priceTag: 'Varia por box',
+        highlight: 'Comidas, ingredientes e clima de mercado de bairro',
+        tip: 'Boa parada de almoço antes de Vila Madalena. Normalmente funciona de segunda a sábado; feriado precisa ser confirmado.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Mercado+Municipal+de+Pinheiros',
+        bestDay: '10/10',
+        status: 'verificar'
+      },
+      {
+        id: 'hotpork',
+        name: 'Hot Pork',
+        category: 'gastro',
+        region: 'República / Centro',
+        price: '$',
+        priceTag: 'R$ 40–60 aprox.',
+        highlight: 'Cachorro-quente autoral e rápido',
+        tip: 'Alternativa mais barata no eixo República/Copan quando vocês não quiserem uma refeição longa.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Hot+Pork+Sao+Paulo',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'donaonca',
+        name: 'Bar da Dona Onça • Copan',
+        category: 'gastro',
+        region: 'República / Centro',
+        price: '$$$',
+        priceTag: 'R$ 80–200 aprox.',
+        highlight: 'Cozinha brasileira no térreo do Copan',
+        tip: 'Mais caro que a média da lista, mas é uma opção forte para uma refeição especial; vale reservar.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Bar+da+Dona+Onca+Copan',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'pateocolegio',
+        name: 'Pátio do Colégio',
+        category: 'culture',
+        region: 'Centro Histórico',
+        price: '$',
+        priceTag: 'Praça grátis • museu pago',
+        highlight: 'Marco histórico da fundação de São Paulo',
+        tip: 'Combine de dia com Catedral da Sé, CCBB e Mosteiro de São Bento. Evitem transformar esse trecho em passeio noturno a pé.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Patio+do+Colegio+Sao+Paulo',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'catedralse',
+        name: 'Catedral da Sé',
+        category: 'culture',
+        region: 'Centro Histórico',
+        price: 'gratis',
+        priceTag: 'Entrada livre na nave',
+        highlight: 'Um dos marcos arquitetônicos do Centro',
+        tip: 'Façam esse bloco durante o dia e junto de outros pontos do Centro Histórico.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Catedral+da+Se+Sao+Paulo',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+      {
+        id: 'mosteirosaobento',
+        name: 'Mosteiro de São Bento',
+        category: 'culture',
+        region: 'Centro Histórico',
+        price: 'gratis',
+        priceTag: 'Entrada livre',
+        highlight: 'Arquitetura histórica e loja de produtos do mosteiro',
+        tip: 'Fica perto do Centro histórico e dá para fechar o circuito antes de voltar de metrô.',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Mosteiro+de+Sao+Bento+Sao+Paulo',
+        bestDay: '10/10',
+        status: 'verificado'
+      },
+
+      // === MAIS LUGARES CURADOS PARA A VIAGEM ===
+      {
+        id: "lamenkazu",
+        name: "Lamen Kazu",
+        category: "gastro",
+        region: "Liberdade",
+        price: "$$",
+        priceTag: "R$ 50–80",
+        highlight: "Lámen japonês clássico",
+        tip: "Um dos endereços mais tradicionais da Liberdade para lámen.",
+        mapsUrl: "https://maps.google.com/?q=Lamen+Kazu+S%C3%A3o+Paulo"
+      },
+      {
+        id: "aizome",
+        name: "Aizomê",
+        category: "gastro",
+        region: "Jardim Paulista",
+        price: "$$$",
+        priceTag: "R$ 200+",
+        highlight: "Cozinha nipo-brasileira",
+        tip: "Restaurante de Telma Shiraishi que mistura técnica japonesa e ingredientes brasileiros.",
+        mapsUrl: "https://maps.google.com/?q=Aizom%C3%AA+S%C3%A3o+Paulo"
+      },
+      {
+        id: "komah",
+        name: "Komah Restaurante",
+        category: "gastro",
+        region: "Barra Funda",
+        price: "$$$",
+        priceTag: "R$ 80–200",
+        highlight: "Coreano contemporâneo",
+        tip: "Boa opção para provar cozinha coreana além do churrasco tradicional.",
+        mapsUrl: "https://maps.google.com/?q=Komah+Restaurante+S%C3%A3o+Paulo"
+      },
+      {
+        id: "newshinla",
+        name: "New Shin-La Kwan",
+        category: "gastro",
+        region: "Bom Retiro",
+        price: "$$",
+        priceTag: "R$ 80–180",
+        highlight: "Churrasco coreano",
+        tip: "Clássico do Bom Retiro para dividir grelhados e acompanhamentos coreanos.",
+        mapsUrl: "https://maps.google.com/?q=New+Shin-La+Kwan+S%C3%A3o+Paulo"
+      },
+      {
+        id: "choyee",
+        name: "Choyee Café e Restaurante",
+        category: "gastro",
+        region: "Bom Retiro",
+        price: "$$",
+        priceTag: "R$ 60–100",
+        highlight: "Comida coreana caseira",
+        tip: "Cardápio coreano em um dos bairros mais ligados à comunidade coreana de SP.",
+        mapsUrl: "https://maps.google.com/?q=Choyee+Caf%C3%A9+e+Restaurante+S%C3%A3o+Paulo"
+      },
+      {
+        id: "casadoporco",
+        name: "A Casa do Porco",
+        category: "gastro",
+        region: "República",
+        price: "$$$",
+        priceTag: "R$ 200+",
+        highlight: "Cozinha brasileira premiada",
+        tip: "Casa de Jefferson Rueda no Centro, boa para um match de refeição especial.",
+        mapsUrl: "https://maps.google.com/?q=A+Casa+do+Porco+S%C3%A3o+Paulo"
+      },
+      {
+        id: "buzinaburgers",
+        name: "Buzina Burgers",
+        category: "gastro",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 60–100",
+        highlight: "Hambúrguer + clima animado",
+        tip: "Hambúrgueres, fritas e salão movimentado em Pinheiros.",
+        mapsUrl: "https://maps.google.com/?q=Buzina+Burgers+S%C3%A3o+Paulo"
+      },
+      {
+        id: "holyburger",
+        name: "Holy Burger",
+        category: "gastro",
+        region: "Vila Buarque",
+        price: "$$",
+        priceTag: "R$ 60–140",
+        highlight: "Hambúrguer artesanal",
+        tip: "Uma das hamburguerias conhecidas do Centro, boa para almoço ou noite.",
+        mapsUrl: "https://maps.google.com/?q=Holy+Burger+S%C3%A3o+Paulo"
+      },
+      {
+        id: "sujinho",
+        name: "Sujinho",
+        category: "gastro",
+        region: "Consolação",
+        price: "$$",
+        priceTag: "R$ 60–160",
+        highlight: "Bife e comida paulistana clássica",
+        tip: "Restaurante tradicional e ótimo coringa para comer tarde.",
+        mapsUrl: "https://maps.google.com/?q=Sujinho+S%C3%A3o+Paulo"
+      },
+      {
+        id: "basilicata",
+        name: "Basilicata - Panetteria Mercato Cucina",
+        category: "gastro",
+        region: "Bixiga / Bela Vista",
+        price: "$$",
+        priceTag: "R$ 40–140",
+        highlight: "Padaria italiana centenária",
+        tip: "Pães, massas e clima italiano no Bixiga.",
+        mapsUrl: "https://maps.google.com/?q=Basilicata+-+Panetteria+Mercato+Cucina+S%C3%A3o+Paulo"
+      },
+      {
+        id: "roperto",
+        name: "Empório Cantina Roperto",
+        category: "gastro",
+        region: "Bixiga / Bela Vista",
+        price: "$$",
+        priceTag: "R$ 80–200",
+        highlight: "Cantina italiana tradicional",
+        tip: "Porções fartas e clima clássico de cantina no Bixiga.",
+        mapsUrl: "https://maps.google.com/?q=Emp%C3%B3rio+Cantina+Roperto+S%C3%A3o+Paulo"
+      },
+      {
+        id: "jardimdenapoli",
+        name: "Jardim de Napoli",
+        category: "gastro",
+        region: "Higienópolis / Vila Buarque",
+        price: "$$",
+        priceTag: "R$ 80–180",
+        highlight: "Polpettone clássico",
+        tip: "Um clássico paulistano para quem gosta de cozinha italiana bem tradicional.",
+        mapsUrl: "https://maps.google.com/?q=Jardim+de+Napoli+S%C3%A3o+Paulo"
+      },
+      {
+        id: "lellis",
+        name: "Lellis Trattoria",
+        category: "gastro",
+        region: "Jardins",
+        price: "$$$",
+        priceTag: "R$ 100+",
+        highlight: "Massas e cantina até tarde",
+        tip: "Boa opção para uma noite de massa em clima tradicional.",
+        mapsUrl: "https://maps.google.com/?q=Lellis+Trattoria+S%C3%A3o+Paulo"
+      },
+      {
+        id: "carlospizza",
+        name: "Carlos Pizza",
+        category: "gastro",
+        region: "Jardins",
+        price: "$$",
+        priceTag: "R$ 80–160",
+        highlight: "Pizza autoral",
+        tip: "Pizzaria pequena e disputada, ótima para um match mais gastronômico.",
+        mapsUrl: "https://maps.google.com/?q=Carlos+Pizza+S%C3%A3o+Paulo"
+      },
+      {
+        id: "leggerapizza",
+        name: "Leggera Pizza Napoletana",
+        category: "gastro",
+        region: "Pompeia",
+        price: "$$",
+        priceTag: "R$ 60–140",
+        highlight: "Pizza napolitana",
+        tip: "Massa leve e estilo napolitano para variar das pizzarias mais tradicionais.",
+        mapsUrl: "https://maps.google.com/?q=Leggera+Pizza+Napoletana+S%C3%A3o+Paulo"
+      },
+      {
+        id: "mocoto",
+        name: "Mocotó Vila Medeiros",
+        category: "gastro",
+        region: "Vila Medeiros",
+        price: "$$",
+        priceTag: "R$ 80–160",
+        highlight: "Cozinha nordestina icônica",
+        tip: "É mais longe, mas vale entrar na votação como experiência gastronômica de SP.",
+        mapsUrl: "https://maps.google.com/?q=Mocot%C3%B3+Vila+Medeiros+S%C3%A3o+Paulo"
+      },
+      {
+        id: "abaianeiramasp",
+        name: "A Baianeira - MASP",
+        category: "gastro",
+        region: "Paulista",
+        price: "$$",
+        priceTag: "R$ 60–160",
+        highlight: "Brasil dentro do MASP",
+        tip: "Boa combinação para emendar almoço com um passeio pela Paulista.",
+        mapsUrl: "https://maps.google.com/?q=A+Baianeira+-+MASP+S%C3%A3o+Paulo"
+      },
+      {
+        id: "futurorefeitorio",
+        name: "Futuro Refeitório",
+        category: "gastro",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 40–100",
+        highlight: "Brunch, pães e refeições",
+        tip: "Funciona bem tanto para café da manhã quanto para almoço descontraído.",
+        mapsUrl: "https://maps.google.com/?q=Futuro+Refeit%C3%B3rio+S%C3%A3o+Paulo"
+      },
+      {
+        id: "tappotrattoria",
+        name: "Tappo Trattoria",
+        category: "gastro",
+        region: "Higienópolis",
+        price: "$$$",
+        priceTag: "R$ 180+",
+        highlight: "Clássicos italianos",
+        tip: "Carbonara, massas e ambiente intimista no Edifício Paquita.",
+        mapsUrl: "https://maps.google.com/?q=Tappo+Trattoria+S%C3%A3o+Paulo"
+      },
+      {
+        id: "shihomapasta",
+        name: "Shihoma Pasta Fresca",
+        category: "gastro",
+        region: "Vila Madalena",
+        price: "$$",
+        priceTag: "R$ 80–160",
+        highlight: "Massas frescas",
+        tip: "Pequeno restaurante focado em massas, bom para um jantar mais especial.",
+        mapsUrl: "https://maps.google.com/?q=Shihoma+Pasta+Fresca+S%C3%A3o+Paulo"
+      },
+      {
+        id: "mapubaos",
+        name: "Mapu Baos e Comidinhas",
+        category: "gastro",
+        region: "Vila Mariana",
+        price: "$$",
+        priceTag: "R$ 60–100",
+        highlight: "Baos e cozinha taiwanesa",
+        tip: "Ótima opção para compartilhar baos e provar sabores taiwaneses.",
+        mapsUrl: "https://maps.google.com/?q=Mapu+Baos+e+Comidinhas+S%C3%A3o+Paulo"
+      },
+      {
+        id: "kidoairaku",
+        name: "Kidoairaku Japanese Cuisine",
+        category: "gastro",
+        region: "Liberdade",
+        price: "$$",
+        priceTag: "R$ 60–120",
+        highlight: "Japonês tradicional",
+        tip: "Alternativa menos óbvia na Liberdade para pratos japoneses clássicos.",
+        mapsUrl: "https://maps.google.com/?q=Kidoairaku+Japanese+Cuisine+S%C3%A3o+Paulo"
+      },
+      {
+        id: "izakayaissa",
+        name: "Izakaya Issa",
+        category: "gastro",
+        region: "Liberdade",
+        price: "$$",
+        priceTag: "R$ 60–140",
+        highlight: "Izakaya tradicional",
+        tip: "Petiscos japoneses, saquê e clima de boteco japonês.",
+        mapsUrl: "https://maps.google.com/?q=Izakaya+Issa+S%C3%A3o+Paulo"
+      },
+      {
+        id: "tantan",
+        name: "Tan Tan",
+        category: "gastro",
+        region: "Pinheiros",
+        price: "$$$",
+        priceTag: "R$ 200+",
+        highlight: "Asiático + coquetelaria",
+        tip: "Boa escolha quando vocês querem jantar e já começar a noite no mesmo lugar.",
+        mapsUrl: "https://maps.google.com/?q=Tan+Tan+S%C3%A3o+Paulo"
+      },
+      {
+        id: "mani",
+        name: "Maní",
+        category: "gastro",
+        region: "Jardim Paulistano",
+        price: "$$$",
+        priceTag: "R$ 200+",
+        highlight: "Alta gastronomia brasileira",
+        tip: "Opção de refeição especial para deixar na votação mesmo que seja mais cara.",
+        mapsUrl: "https://maps.google.com/?q=Man%C3%AD+S%C3%A3o+Paulo"
+      },
+      {
+        id: "arturito",
+        name: "Arturito",
+        category: "gastro",
+        region: "Jardim Paulista",
+        price: "$$$",
+        priceTag: "R$ 200+",
+        highlight: "Cozinha de Helena Rizzo",
+        tip: "Restaurante autoral com foco em ingredientes e preparos bem feitos.",
+        mapsUrl: "https://maps.google.com/?q=Arturito+S%C3%A3o+Paulo"
+      },
+      {
+        id: "casarios",
+        name: "Casa Rios",
+        category: "gastro",
+        region: "Pinheiros",
+        price: "$$$",
+        priceTag: "R$ 100–200",
+        highlight: "Cozinha na brasa",
+        tip: "Restaurante intimista em Pinheiros, bom para almoço ou jantar mais caprichado.",
+        mapsUrl: "https://maps.google.com/?q=Casa+Rios+S%C3%A3o+Paulo"
+      },
+      {
+        id: "bluebar",
+        name: "Blue Bar",
+        category: "night",
+        region: "República",
+        price: "$$",
+        priceTag: "R$ 40–100",
+        highlight: "Bar gay no Centro",
+        tip: "Opção LGBT+ na República para drinks e encontro antes da balada.",
+        mapsUrl: "https://maps.google.com/?q=Blue+Bar+S%C3%A3o+Paulo"
+      },
+      {
+        id: "dedalos",
+        name: "Dedalos Bar",
+        category: "night",
+        region: "República",
+        price: "$$",
+        priceTag: "R$ 40–120",
+        highlight: "Bar gay clássico",
+        tip: "Endereço tradicional da Rua Bento Freitas.",
+        mapsUrl: "https://maps.google.com/?q=Dedalos+Bar+S%C3%A3o+Paulo"
+      },
+      {
+        id: "tunnel",
+        name: "Tunnel",
+        category: "night",
+        region: "Bela Vista",
+        price: "$$",
+        priceTag: "R$ 40–100",
+        highlight: "Clube LGBT+",
+        tip: "Balada gay tradicional para quem quiser uma noite mais focada em pista.",
+        mapsUrl: "https://maps.google.com/?q=Tunnel+S%C3%A3o+Paulo"
+      },
+      {
+        id: "gasparbar",
+        name: "Gaspar Bar & Praça",
+        category: "night",
+        region: "República",
+        price: "$$",
+        priceTag: "R$ 40–120",
+        highlight: "Bar + DJs + público LGBT+",
+        tip: "Fica em frente à Praça Dom José Gaspar e ganha mais clima de festa no fim de semana.",
+        mapsUrl: "https://maps.google.com/?q=Gaspar+Bar+%26+Pra%C3%A7a+S%C3%A3o+Paulo"
+      },
+      {
+        id: "bandeirabandeira",
+        name: "Bandeira Bandeira",
+        category: "night",
+        region: "Barra Funda",
+        price: "$$",
+        priceTag: "R$ 40–60",
+        highlight: "Drinks acessíveis e ambiente inclusivo",
+        tip: "Bom para começar a noite com coquetéis sem ir direto para uma balada.",
+        mapsUrl: "https://maps.google.com/?q=Bandeira+Bandeira+S%C3%A3o+Paulo"
+      },
+      {
+        id: "bocadeouro",
+        name: "Boca de Ouro",
+        category: "night",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 60–160",
+        highlight: "Coquetelaria descontraída",
+        tip: "Bar conhecido pelos drinks e pelo clima de Pinheiros.",
+        mapsUrl: "https://maps.google.com/?q=Boca+de+Ouro+S%C3%A3o+Paulo"
+      },
+      {
+        id: "guilhotina",
+        name: "Guilhotina Bar",
+        category: "night",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 80–200",
+        highlight: "Coquetelaria premiada",
+        tip: "Boa opção para quem gosta de drinks mais elaborados.",
+        mapsUrl: "https://maps.google.com/?q=Guilhotina+Bar+S%C3%A3o+Paulo"
+      },
+      {
+        id: "santanabar",
+        name: "Santana Bar",
+        category: "night",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 80–200",
+        highlight: "Drinks em Pinheiros",
+        tip: "Bar de coquetelaria para uma noite mais tranquila e arrumada.",
+        mapsUrl: "https://maps.google.com/?q=Santana+Bar+S%C3%A3o+Paulo"
+      },
+      {
+        id: "tragobar",
+        name: "Trago Bar",
+        category: "night",
+        region: "Barra Funda",
+        price: "$$",
+        priceTag: "R$ 40–140",
+        highlight: "Drinks + clima descolado",
+        tip: "Boa alternativa na Barra Funda para sair sem necessariamente ir para pista.",
+        mapsUrl: "https://maps.google.com/?q=Trago+Bar+S%C3%A3o+Paulo"
+      },
+      {
+        id: "bardosarcos",
+        name: "Bar dos Arcos",
+        category: "night",
+        region: "Centro / República",
+        price: "$$",
+        priceTag: "R$ 60–180",
+        highlight: "Bar subterrâneo do Municipal",
+        tip: "Fica sob o Theatro Municipal e tem um dos ambientes mais diferentes da cidade.",
+        mapsUrl: "https://maps.google.com/?q=Bar+dos+Arcos+S%C3%A3o+Paulo"
+      },
+      {
+        id: "iccarus",
+        name: "Iccarus",
+        category: "night",
+        region: "Centro Histórico",
+        price: "$$",
+        priceTag: "R$ 80–180",
+        highlight: "Rooftop no Mirante do Vale",
+        tip: "Vista do alto, drinks e pista para uma experiência bem paulistana.",
+        mapsUrl: "https://maps.google.com/?q=Iccarus+S%C3%A3o+Paulo"
+      },
+      {
+        id: "estherrooftop",
+        name: "Esther Rooftop",
+        category: "night",
+        region: "República",
+        price: "$$$",
+        priceTag: "R$ 200+",
+        highlight: "Rooftop na Praça da República",
+        tip: "Mais focado em jantar e drinks com vista, bom para uma noite especial.",
+        mapsUrl: "https://maps.google.com/?q=Esther+Rooftop+S%C3%A3o+Paulo"
+      },
+      {
+        id: "arenakaraoke",
+        name: "Arena Karaoke Liberdade",
+        category: "night",
+        region: "Liberdade",
+        price: "$$",
+        priceTag: "R$ 40–100",
+        highlight: "Karaokê até tarde",
+        tip: "Ótima opção para o trio cantar e esticar a noite na Liberdade.",
+        mapsUrl: "https://maps.google.com/?q=Arena+Karaoke+Liberdade+S%C3%A3o+Paulo"
+      },
+      {
+        id: "bourbonstreet",
+        name: "Bourbon Street Music Club",
+        category: "night",
+        region: "Moema",
+        price: "$$",
+        priceTag: "Consultar evento",
+        highlight: "Jazz, blues e música ao vivo",
+        tip: "Vale para uma noite diferente quando a programação tiver um show que vocês curtam.",
+        mapsUrl: "https://maps.google.com/?q=Bourbon+Street+Music+Club+S%C3%A3o+Paulo"
+      },
+      {
+        id: "theatromunicipal",
+        name: "Theatro Municipal de São Paulo",
+        category: "culture",
+        region: "Centro Histórico",
+        price: "$$",
+        priceTag: "Visita / espetáculo",
+        highlight: "Arquitetura + música + história",
+        tip: "Mesmo sem espetáculo, vale pela arquitetura e pelas visitas educativas.",
+        mapsUrl: "https://maps.google.com/?q=Theatro+Municipal+de+S%C3%A3o+Paulo+S%C3%A3o+Paulo"
+      },
+      {
+        id: "estacaoluz",
+        name: "Estação da Luz",
+        category: "culture",
+        region: "Luz",
+        price: "gratis",
+        priceTag: "Grátis",
+        highlight: "Arquitetura histórica",
+        tip: "Dá para combinar facilmente com Pinacoteca e Museu da Língua Portuguesa.",
+        mapsUrl: "https://maps.google.com/?q=Esta%C3%A7%C3%A3o+da+Luz+S%C3%A3o+Paulo"
+      },
+      {
+        id: "catavento",
+        name: "Museu Catavento",
+        category: "culture",
+        region: "Centro / Brás",
+        price: "$$",
+        priceTag: "Consultar ingresso",
+        highlight: "Museu de ciência interativo",
+        tip: "Passeio divertido e diferente dos museus de arte.",
+        mapsUrl: "https://maps.google.com/?q=Museu+Catavento+S%C3%A3o+Paulo"
+      },
+      {
+        id: "martinelli",
+        name: "Edifício Martinelli",
+        category: "culture",
+        region: "Centro Histórico",
+        price: "$$",
+        priceTag: "Consultar visita",
+        highlight: "Mirante e arquitetura histórica",
+        tip: "Um dos arranha-céus históricos do Centro, com visitas e eventos.",
+        mapsUrl: "https://maps.google.com/?q=Edif%C3%ADcio+Martinelli+S%C3%A3o+Paulo"
+      },
+      {
+        id: "museudoipiranga",
+        name: "Museu do Ipiranga",
+        category: "culture",
+        region: "Ipiranga",
+        price: "$$",
+        priceTag: "Consultar ingresso",
+        highlight: "História do Brasil + prédio monumental",
+        tip: "Um dos museus mais bonitos da cidade, com jardins e Parque da Independência ao redor.",
+        mapsUrl: "https://maps.google.com/?q=Museu+do+Ipiranga+S%C3%A3o+Paulo"
+      },
+      {
+        id: "museudaimigracao",
+        name: "Museu da Imigração",
+        category: "culture",
+        region: "Mooca",
+        price: "$$",
+        priceTag: "Consultar ingresso",
+        highlight: "Histórias de imigração",
+        tip: "Museu instalado na antiga Hospedaria de Imigrantes, ótimo para conhecer outra parte de SP.",
+        mapsUrl: "https://maps.google.com/?q=Museu+da+Imigra%C3%A7%C3%A3o+S%C3%A3o+Paulo"
+      },
+      {
+        id: "salasaopaulo",
+        name: "Sala São Paulo",
+        category: "culture",
+        region: "Luz",
+        price: "$$",
+        priceTag: "Consultar visita/show",
+        highlight: "Sala de concertos histórica",
+        tip: "Mesmo sem concerto, o prédio e a acústica fazem valer a visita.",
+        mapsUrl: "https://maps.google.com/?q=Sala+S%C3%A3o+Paulo+S%C3%A3o+Paulo"
+      },
+      {
+        id: "memorialamericalatina",
+        name: "Memorial da América Latina",
+        category: "culture",
+        region: "Barra Funda",
+        price: "gratis",
+        priceTag: "Grátis / eventos",
+        highlight: "Niemeyer + cultura latino-americana",
+        tip: "Complexo cultural amplo, com exposições e eventos.",
+        mapsUrl: "https://maps.google.com/?q=Memorial+da+Am%C3%A9rica+Latina+S%C3%A3o+Paulo"
+      },
+      {
+        id: "museuafrobrasil",
+        name: "Museu Afro Brasil Emanoel Araujo",
+        category: "culture",
+        region: "Ibirapuera",
+        price: "$$",
+        priceTag: "Consultar ingresso",
+        highlight: "Arte e história afro-brasileira",
+        tip: "Excelente complemento para um dia no Parque Ibirapuera.",
+        mapsUrl: "https://maps.google.com/?q=Museu+Afro+Brasil+Emanoel+Araujo+S%C3%A3o+Paulo"
+      },
+      {
+        id: "mamsp",
+        name: "MAM São Paulo",
+        category: "culture",
+        region: "Ibirapuera",
+        price: "$$",
+        priceTag: "Consultar ingresso",
+        highlight: "Arte moderna no Ibirapuera",
+        tip: "A sede reabre em setembro de 2026, então já entra na votação para a viagem de outubro.",
+        mapsUrl: "https://maps.google.com/?q=MAM+S%C3%A3o+Paulo+S%C3%A3o+Paulo"
+      },
+      {
+        id: "ocaibirapuera",
+        name: "Oca do Ibirapuera",
+        category: "culture",
+        region: "Ibirapuera",
+        price: "$$",
+        priceTag: "Depende da exposição",
+        highlight: "Pavilhão de Niemeyer",
+        tip: "Espaço icônico que recebe exposições temporárias e grandes eventos.",
+        mapsUrl: "https://maps.google.com/?q=Oca+do+Ibirapuera+S%C3%A3o+Paulo"
+      },
+      {
+        id: "cinemateca",
+        name: "Cinemateca Brasileira",
+        category: "culture",
+        region: "Vila Mariana",
+        price: "gratis",
+        priceTag: "Muitas sessões grátis",
+        highlight: "Cinema + arquitetura",
+        tip: "Boa para quem curte filmes, mostras e um espaço cultural mais tranquilo.",
+        mapsUrl: "https://maps.google.com/?q=Cinemateca+Brasileira+S%C3%A3o+Paulo"
+      },
+      {
+        id: "parqueindependencia",
+        name: "Parque da Independência",
+        category: "culture",
+        region: "Ipiranga",
+        price: "gratis",
+        priceTag: "Grátis",
+        highlight: "Jardins + Monumento à Independência",
+        tip: "Perfeito para combinar com o Museu do Ipiranga.",
+        mapsUrl: "https://maps.google.com/?q=Parque+da+Independ%C3%AAncia+S%C3%A3o+Paulo"
+      },
+      {
+        id: "parquetrianon",
+        name: "Parque Trianon",
+        category: "culture",
+        region: "Paulista",
+        price: "gratis",
+        priceTag: "Grátis",
+        highlight: "Mata Atlântica em plena Paulista",
+        tip: "Uma pausa verde literalmente em frente ao MASP.",
+        mapsUrl: "https://maps.google.com/?q=Parque+Trianon+S%C3%A3o+Paulo"
+      },
+      {
+        id: "itaucultural",
+        name: "Itaú Cultural",
+        category: "culture",
+        region: "Paulista",
+        price: "gratis",
+        priceTag: "Grátis",
+        highlight: "Exposições e cultura brasileira",
+        tip: "Centro cultural gratuito no começo da Paulista.",
+        mapsUrl: "https://maps.google.com/?q=Ita%C3%BA+Cultural+S%C3%A3o+Paulo"
+      },
+      {
+        id: "fiespcultural",
+        name: "Centro Cultural Fiesp",
+        category: "culture",
+        region: "Paulista",
+        price: "gratis",
+        priceTag: "Grátis",
+        highlight: "Galeria, teatro e programação cultural",
+        tip: "Fica em frente ao metrô Trianon-Masp e costuma ter programação gratuita.",
+        mapsUrl: "https://maps.google.com/?q=Centro+Cultural+Fiesp+S%C3%A3o+Paulo"
+      },
+      {
+        id: "museujudaico",
+        name: "Museu Judaico de São Paulo",
+        category: "culture",
+        region: "Bela Vista",
+        price: "$$",
+        priceTag: "Consultar ingresso",
+        highlight: "História judaica no Brasil",
+        tip: "Museu contemporâneo em uma antiga sinagoga restaurada.",
+        mapsUrl: "https://maps.google.com/?q=Museu+Judaico+de+S%C3%A3o+Paulo+S%C3%A3o+Paulo"
+      },
+      {
+        id: "missp",
+        name: "MIS - Museu da Imagem e do Som",
+        category: "culture",
+        region: "Jardim Europa",
+        price: "$$",
+        priceTag: "Consultar exposição",
+        highlight: "Cinema, fotografia e cultura pop",
+        tip: "As exposições temporárias costumam render ótimos matches.",
+        mapsUrl: "https://maps.google.com/?q=MIS+-+Museu+da+Imagem+e+do+Som+S%C3%A3o+Paulo"
+      },
+      {
+        id: "mube",
+        name: "MuBE - Museu Brasileiro da Escultura e Ecologia",
+        category: "culture",
+        region: "Jardim Europa",
+        price: "gratis",
+        priceTag: "Consultar / muitas atividades grátis",
+        highlight: "Arquitetura brutalista + arte",
+        tip: "Fica perto do MIS e dá para combinar os dois no mesmo período.",
+        mapsUrl: "https://maps.google.com/?q=MuBE+-+Museu+Brasileiro+da+Escultura+e+Ecologia+S%C3%A3o+Paulo"
+      },
+      {
+        id: "kazucake",
+        name: "Espaço Kazu - Kazu Cake",
+        category: "cafe",
+        region: "Liberdade",
+        price: "$$",
+        priceTag: "R$ 20–60",
+        highlight: "Confeitaria japonesa",
+        tip: "Choux cream, bolos de matchá e doces japoneses no andar de cima do Espaço Kazu.",
+        mapsUrl: "https://maps.google.com/?q=Espa%C3%A7o+Kazu+-+Kazu+Cake+S%C3%A3o+Paulo"
+      },
+      {
+        id: "gelatodasato",
+        name: "Gelato da Sato - Sogo",
+        category: "cafe",
+        region: "Liberdade",
+        price: "$$",
+        priceTag: "R$ 15–30",
+        highlight: "Gelato dentro do Sogo",
+        tip: "Boa parada doce enquanto vocês passeiam pelas lojas da Liberdade.",
+        mapsUrl: "https://maps.google.com/?q=Gelato+da+Sato+-+Sogo+S%C3%A3o+Paulo"
+      },
+      {
+        id: "hokkacream",
+        name: "Hokka Cream",
+        category: "cafe",
+        region: "Jardins / Consolação",
+        price: "$$",
+        priceTag: "R$ 20–40",
+        highlight: "Soft cream japonês",
+        tip: "Sorvetes cremosos e sabores com pegada japonesa.",
+        mapsUrl: "https://maps.google.com/?q=Hokka+Cream+S%C3%A3o+Paulo"
+      },
+      {
+        id: "fridaemina",
+        name: "Frida & Mina",
+        category: "cafe",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 15–30",
+        highlight: "Sorvete artesanal",
+        tip: "Uma das sorveterias mais conhecidas de Pinheiros.",
+        mapsUrl: "https://maps.google.com/?q=Frida+%26+Mina+S%C3%A3o+Paulo"
+      },
+      {
+        id: "alberodeigelati",
+        name: "Albero dei Gelati",
+        category: "cafe",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 15–30",
+        highlight: "Gelato italiano",
+        tip: "Boa opção de sobremesa depois de comer em Pinheiros.",
+        mapsUrl: "https://maps.google.com/?q=Albero+dei+Gelati+S%C3%A3o+Paulo"
+      },
+      {
+        id: "damazonia",
+        name: "Gelateria Damazônia",
+        category: "cafe",
+        region: "Consolação",
+        price: "$$",
+        priceTag: "R$ 15–30",
+        highlight: "Sabores amazônicos",
+        tip: "Gelatos com ingredientes e referências brasileiras.",
+        mapsUrl: "https://maps.google.com/?q=Gelateria+Damaz%C3%B4nia+S%C3%A3o+Paulo"
+      },
+      {
+        id: "lumicreamy",
+        name: "Lumi Creamy",
+        category: "cafe",
+        region: "Vila Madalena",
+        price: "$$",
+        priceTag: "R$ 15–30",
+        highlight: "Sorvetes criativos",
+        tip: "Pequena sorveteria com sabores fora do óbvio.",
+        mapsUrl: "https://maps.google.com/?q=Lumi+Creamy+S%C3%A3o+Paulo"
+      },
+      {
+        id: "missionchocolate",
+        name: "Mission Chocolate Café",
+        category: "cafe",
+        region: "Brooklin",
+        price: "$$",
+        priceTag: "R$ 20–60",
+        highlight: "Chocolate bean-to-bar",
+        tip: "Para quem gosta de chocolate de origem e sobremesas mais autorais.",
+        mapsUrl: "https://maps.google.com/?q=Mission+Chocolate+Caf%C3%A9+S%C3%A3o+Paulo"
+      },
+      {
+        id: "umcoffee",
+        name: "UM Coffee Co.",
+        category: "cafe",
+        region: "Bom Retiro",
+        price: "$$",
+        priceTag: "R$ 20–60",
+        highlight: "Café especial premiado",
+        tip: "Boa desculpa para explorar o Bom Retiro além dos restaurantes coreanos.",
+        mapsUrl: "https://maps.google.com/?q=UM+Coffee+Co.+S%C3%A3o+Paulo"
+      },
+      {
+        id: "botanikafe",
+        name: "Botanikafé Pinheiros",
+        category: "cafe",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 60–120",
+        highlight: "Brunch o dia todo",
+        tip: "Ótimo para café da manhã reforçado, brunch ou começo de noite.",
+        mapsUrl: "https://maps.google.com/?q=Botanikaf%C3%A9+Pinheiros+S%C3%A3o+Paulo"
+      },
+      {
+        id: "santograo",
+        name: "Santo Grão Oscar Freire",
+        category: "cafe",
+        region: "Jardins",
+        price: "$$",
+        priceTag: "R$ 40–140",
+        highlight: "Café + brunch + jantar",
+        tip: "Coringa para qualquer horário quando vocês estiverem pelos Jardins.",
+        mapsUrl: "https://maps.google.com/?q=Santo+Gr%C3%A3o+Oscar+Freire+S%C3%A3o+Paulo"
+      },
+      {
+        id: "cafetina",
+        name: "Cafetina",
+        category: "cafe",
+        region: "Vila Buarque",
+        price: "$$",
+        priceTag: "R$ 40–100",
+        highlight: "Café especial + comidinhas",
+        tip: "Cafeteria nova na região central com foco em café e padaria.",
+        mapsUrl: "https://maps.google.com/?q=Cafetina+S%C3%A3o+Paulo"
+      },
+      {
+        id: "dramacafe",
+        name: "Drama Café",
+        category: "cafe",
+        region: "Santa Cecília",
+        price: "$$",
+        priceTag: "R$ 40–60",
+        highlight: "Café em casarão descolado",
+        tip: "Boa parada no eixo Santa Cecília / Minhocão.",
+        mapsUrl: "https://maps.google.com/?q=Drama+Caf%C3%A9+S%C3%A3o+Paulo"
+      },
+      {
+        id: "morichazeria",
+        name: "Mori Chazeria",
+        category: "cafe",
+        region: "Paraíso",
+        price: "$$",
+        priceTag: "R$ 30–80",
+        highlight: "Casa de chá japonesa",
+        tip: "Para variar do café: chás, doces e pratos com inspiração japonesa.",
+        mapsUrl: "https://maps.google.com/?q=Mori+Chazeria+S%C3%A3o+Paulo"
+      },
+      {
+        id: "talcha",
+        name: "Talchá - Pátio Higienópolis",
+        category: "cafe",
+        region: "Higienópolis",
+        price: "$$",
+        priceTag: "R$ 20–50",
+        highlight: "Chás e infusões",
+        tip: "Boa opção para quem prefere chá, bebidas geladas e algo mais leve.",
+        mapsUrl: "https://maps.google.com/?q=Talch%C3%A1+-+P%C3%A1tio+Higien%C3%B3polis+S%C3%A3o+Paulo"
+      },
+      {
+        id: "kof",
+        name: "KOF - King of The Fork",
+        category: "cafe",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 20–40",
+        highlight: "Café + cultura de bike",
+        tip: "Cafeteria clássica de Pinheiros, ótima para uma parada rápida.",
+        mapsUrl: "https://maps.google.com/?q=KOF+-+King+of+The+Fork+S%C3%A3o+Paulo"
+      },
+      {
+        id: "fabrique",
+        name: "Fabrique Pão e Café",
+        category: "cafe",
+        region: "Higienópolis / Consolação",
+        price: "$$",
+        priceTag: "R$ 40–60",
+        highlight: "Pães artesanais",
+        tip: "Padaria-café boa para café da manhã e sanduíches.",
+        mapsUrl: "https://maps.google.com/?q=Fabrique+P%C3%A3o+e+Caf%C3%A9+S%C3%A3o+Paulo"
+      },
+      {
+        id: "adaracafe",
+        name: "Adara Café Pinheiros",
+        category: "cafe",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 30–70",
+        highlight: "Café novo em Pinheiros",
+        tip: "Opção recente com cafés especiais e comidinhas.",
+        mapsUrl: "https://maps.google.com/?q=Adara+Caf%C3%A9+Pinheiros+S%C3%A3o+Paulo"
+      },
+      {
+        id: "kosmosbakeshop",
+        name: "Kosmos Bakeshop",
+        category: "cafe",
+        region: "Vila Buarque",
+        price: "$$",
+        priceTag: "R$ 20–60",
+        highlight: "Padaria e confeitaria oriental",
+        tip: "Doces e pães com referências asiáticas, ótima para dividir.",
+        mapsUrl: "https://maps.google.com/?q=Kosmos+Bakeshop+S%C3%A3o+Paulo"
+      },
+      {
+        id: "patorei",
+        name: "Pato Rei Pinheiros",
+        category: "cafe",
+        region: "Pinheiros",
+        price: "$$",
+        priceTag: "R$ 40–120",
+        highlight: "Café especial + cozinha oriental",
+        tip: "Cafeteria premiada que também tem sandos, pratos e sobremesas criativas.",
+        mapsUrl: "https://maps.google.com/?q=Pato+Rei+Pinheiros+S%C3%A3o+Paulo"
+      },
+      {
+        id: "ilbaristacentro",
+        name: "IL Barista Cafés Especiais - Centro",
+        category: "cafe",
+        region: "Centro",
+        price: "$$",
+        priceTag: "R$ 20–60",
+        highlight: "Café especial no Centro",
+        tip: "Boa parada para incluir um café de qualidade no dia de Centro Histórico.",
+        mapsUrl: "https://maps.google.com/?q=IL+Barista+Caf%C3%A9s+Especiais+-+Centro+S%C3%A3o+Paulo"
+      }
+    ];
+
+    const CATEGORY_ORDER = { gastro: 1, culture: 2, cafe: 3, night: 4 };
+    const LOCAL_VOTES_KEY = 'sp_trip_votes_simple_v1';
+    const LOCAL_CUSTOM_KEY = 'sp_trip_custom_simple_v1';
+
+    let allPlaces = [...DEFAULT_PLACES];
+    let userVotes = {};
+    let activeCategory = 'all';
+    let searchQuery = '';
+    let currentView = 'places';
+    let isSaving = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      loadLocalFallback();
+      renderAll();
+      lucide.createIcons();
+      await loadFromServer();
+      setInterval(() => { if (!isSaving) loadFromServer(true); }, 8000);
+    });
+
+    function appsScriptAvailable() {
+      return typeof google !== 'undefined' && google.script && google.script.run;
+    }
+
+    function loadLocalFallback() {
+      try {
+        userVotes = JSON.parse(localStorage.getItem(LOCAL_VOTES_KEY) || '{}');
+        const custom = JSON.parse(localStorage.getItem(LOCAL_CUSTOM_KEY) || '[]');
+        if (Array.isArray(custom)) {
+          custom.forEach(p => {
+            if (!allPlaces.some(x => x.id === p.id)) allPlaces.unshift(p);
+          });
+        }
+      } catch (_) {
+        userVotes = {};
+      }
+    }
+
+    function saveLocalFallback() {
+      localStorage.setItem(LOCAL_VOTES_KEY, JSON.stringify(userVotes));
+      localStorage.setItem(LOCAL_CUSTOM_KEY, JSON.stringify(allPlaces.filter(p => p.isCustom)));
+    }
+
+    function serverCall(functionName, ...args) {
+      return new Promise((resolve, reject) => {
+        if (!appsScriptAvailable()) return reject(new Error('Apps Script indisponível'));
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(err => reject(new Error(err && err.message ? err.message : String(err))))
+          [functionName](...args);
+      });
+    }
+
+    async function loadFromServer(silent = false) {
+      if (!appsScriptAvailable()) {
+        setSyncStatus('modo local', false);
+        return;
+      }
+      try {
+        if (!silent) setSyncStatus('sincronizando…', true);
+        const state = await serverCall('getAppState');
+        const serverPlaces = Array.isArray(state.places) ? state.places : [];
+        const serverIds = new Set(serverPlaces.map(p => String(p.id)));
+        const missing = DEFAULT_PLACES.filter(p => !serverIds.has(String(p.id)));
+
+        if (missing.length) {
+          await serverCall('seedDefaultPlaces', missing);
+          const refreshed = await serverCall('getAppState');
+          allPlaces = Array.isArray(refreshed.places) && refreshed.places.length ? refreshed.places : [...DEFAULT_PLACES];
+          userVotes = refreshed.votes || {};
+        } else {
+          allPlaces = serverPlaces.length ? serverPlaces : [...DEFAULT_PLACES];
+          userVotes = state.votes || {};
+        }
+        saveLocalFallback();
+        renderAll();
+        setSyncStatus('● ao vivo', true);
+      } catch (err) {
+        setSyncStatus('modo local', false);
+        if (!silent) showToast('Não consegui sincronizar com a planilha.');
+      }
+    }
+
+    function setSyncStatus(text, online) {
+      const el = document.getElementById('syncStatus');
+      el.textContent = text;
+      el.className = online
+        ? 'text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg'
+        : 'text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg';
+    }
+
+    function voteCount(placeId) {
+      const v = userVotes[placeId] || {};
+      return Number(!!v.carol) + Number(!!v.bia) + Number(!!v.gabriel);
+    }
+
+    async function toggleVote(placeId, person) {
+      if (!userVotes[placeId]) userVotes[placeId] = { carol: false, bia: false, gabriel: false };
+      const before = voteCount(placeId);
+      userVotes[placeId][person] = !userVotes[placeId][person];
+      const value = userVotes[placeId][person];
+      const after = voteCount(placeId);
+      saveLocalFallback();
+      renderAll();
+
+      if (after >= 2 && after > before) {
+        if (typeof confetti === 'function') confetti({ particleCount: after === 3 ? 70 : 30, spread: 55, origin: { y: .78 } });
+        showToast(after === 3 ? '🎉 MATCH 3/3!' : '🔥 Deu match 2/3!');
+      }
+
+      if (!appsScriptAvailable()) return;
+      isSaving = true;
+      try {
+        await serverCall('saveVote', placeId, person, value);
+        setSyncStatus('● ao vivo', true);
+      } catch (err) {
+        showToast('Erro ao salvar o voto. Sincronizando de novo…');
+        await loadFromServer(true);
+      } finally {
+        isSaving = false;
+      }
+    }
+
+    function renderAll() {
+      renderPlaces();
+      renderMatches();
+      updateCounters();
+      lucide.createIcons();
+    }
+
+    function updateCounters() {
+      const matches = allPlaces.filter(p => voteCount(p.id) >= 2).length;
+      document.getElementById('placesCount').textContent = allPlaces.length;
+      document.getElementById('count-all').textContent = `(${allPlaces.length})`;
+      document.getElementById('matchBadge').textContent = matches;
+      document.getElementById('matchesCountBig').textContent = matches;
+    }
+
+    function renderPlaces() {
+      const container = document.getElementById('placesContainer');
+      let items = allPlaces.filter(p => {
+        if (activeCategory !== 'all' && p.category !== activeCategory) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return [p.name, p.region, p.highlight, p.tip].some(x => String(x || '').toLowerCase().includes(q));
+      });
+
+      items.sort((a, b) => {
+        const votesDiff = voteCount(b.id) - voteCount(a.id);
+        if (votesDiff) return votesDiff;
+        return (CATEGORY_ORDER[a.category] || 9) - (CATEGORY_ORDER[b.category] || 9) || String(a.name).localeCompare(String(b.name), 'pt-BR');
+      });
+
+      if (!items.length) {
+        container.innerHTML = emptyState('Nenhum lugar encontrado', 'Tente outro termo ou categoria.');
+        return;
+      }
+      container.innerHTML = items.map(placeCard).join('');
+    }
+
+    function renderMatches() {
+      const container = document.getElementById('matchesContainer');
+      const matches = allPlaces.filter(p => voteCount(p.id) >= 2)
+        .sort((a, b) => voteCount(b.id) - voteCount(a.id) || String(a.name).localeCompare(String(b.name), 'pt-BR'));
+
+      if (!matches.length) {
+        container.innerHTML = emptyState('Ainda não deu match', 'Quando 2 ou 3 pessoas curtirem o mesmo lugar, ele aparece aqui.');
+        return;
+      }
+      container.innerHTML = matches.map(placeCard).join('');
+    }
+
+    function placeCard(p) {
+      const v = userVotes[p.id] || { carol: false, bia: false, gabriel: false };
+      const count = voteCount(p.id);
+      const matched = count >= 2;
+      const triple = count === 3;
+      const categoryIcon = { gastro: '🍔', night: '🏳️‍🌈', culture: '🎨', cafe: '☕' }[p.category] || '📍';
+
+      return `
+        <article class="bg-white rounded-2xl border ${triple ? 'border-pink-300 ring-1 ring-pink-100' : matched ? 'border-purple-200' : 'border-slate-200'} p-3.5 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start gap-2">
+                <span class="mt-0.5 text-sm">${categoryIcon}</span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <h3 class="font-display font-bold text-sm text-slate-900">${escapeHtml(p.name)}</h3>
+                    ${p.priceTag || p.price ? `<span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${escapeHtml(p.priceTag || p.price)}</span>` : ''}
+                  </div>
+                  <p class="text-[11px] text-slate-400 font-semibold mt-0.5">📍 ${escapeHtml(p.region || 'São Paulo')}</p>
+                  ${p.highlight ? `<p class="text-[11px] text-pink-600 font-bold mt-1">✨ ${escapeHtml(p.highlight)}</p>` : ''}
+                  ${p.tip ? `<p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(p.tip)}</p>` : ''}
+                </div>
+              </div>
+              ${p.mapsUrl ? `<a href="${escapeAttr(p.mapsUrl)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:underline mt-2 ml-6"><i data-lucide="map-pin" class="w-3 h-3"></i> Abrir no mapa</a>` : ''}
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0">
+              <div class="flex gap-1.5 overflow-x-auto">
+                ${voteButton(p.id, 'carol', 'Carol', v.carol, 'pink')}
+                ${voteButton(p.id, 'bia', 'Bia', v.bia, 'purple')}
+                ${voteButton(p.id, 'gabriel', 'Gabriel', v.gabriel, 'indigo')}
+              </div>
+              <div class="w-[72px] text-right shrink-0">
+                ${triple
+                  ? '<span class="inline-block text-[10px] font-black text-white bg-pink-600 px-2 py-1 rounded-lg">🎉 3/3</span>'
+                  : matched
+                    ? '<span class="inline-block text-[10px] font-black text-purple-700 bg-purple-100 px-2 py-1 rounded-lg">🔥 2/3</span>'
+                    : `<span class="text-[10px] font-bold text-slate-400">${count ? count + '/3' : '—'}</span>`}
+              </div>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function voteButton(placeId, person, label, active, tone) {
+      const styles = {
+        pink: active ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-pink-50',
+        purple: active ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-purple-50',
+        indigo: active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-indigo-50'
+      };
+      return `<button onclick="toggleVote('${escapeJs(placeId)}','${person}')" class="${active ? 'vote-pop ' : ''}shrink-0 px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition ${styles[tone]}">${active ? '♥' : '♡'} ${label}</button>`;
+    }
+
+    function emptyState(title, desc) {
+      return `<div class="bg-white border border-dashed border-slate-300 rounded-2xl py-12 px-4 text-center"><div class="text-2xl mb-2">🗺️</div><h3 class="font-display font-bold text-sm text-slate-800">${title}</h3><p class="text-xs text-slate-500 mt-1">${desc}</p></div>`;
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        const active = btn.dataset.cat === cat;
+        btn.className = `cat-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold ${active ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+      });
+      renderPlaces();
+      lucide.createIcons();
+    }
+
+    function applyFilters() {
+      searchQuery = document.getElementById('searchInput').value.trim();
+      renderPlaces();
+      lucide.createIcons();
+    }
+
+    function switchView(view) {
+      currentView = view;
+      const places = view === 'places';
+      document.getElementById('viewPlaces').classList.toggle('hidden', !places);
+      document.getElementById('viewMatches').classList.toggle('hidden', places);
+      document.getElementById('tabPlaces').className = places
+        ? 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm'
+        : 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900';
+      document.getElementById('tabMatches').className = !places
+        ? 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold bg-pink-600 text-white shadow-sm'
+        : 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900';
+      if (!places) renderMatches();
+      lucide.createIcons();
+    }
+
+    function openAddModal() {
+      const modal = document.getElementById('addModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => document.getElementById('newName').focus(), 50);
+    }
+
+    function closeAddModal() {
+      const modal = document.getElementById('addModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function handleAddPlace(event) {
+      event.preventDefault();
+      const name = document.getElementById('newName').value.trim();
+      const category = document.getElementById('newCategory').value;
+      const region = document.getElementById('newRegion').value.trim();
+      const highlight = document.getElementById('newHighlight').value.trim();
+      if (!name || !region) return;
+
+      const place = {
+        id: 'custom_' + Date.now(),
+        name, category, region,
+        price: '', priceTag: '', highlight, tip: '',
+        mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' ' + region + ' São Paulo')}`,
+        isCustom: true
+      };
+
+      allPlaces.unshift(place);
+      userVotes[place.id] = { carol: false, bia: false, gabriel: false };
+      saveLocalFallback();
+      closeAddModal();
+      event.target.reset();
+      renderAll();
+      showToast('Lugar adicionado ✨');
+
+      if (!appsScriptAvailable()) return;
+      isSaving = true;
+      try {
+        await serverCall('addPlace', place);
+        await loadFromServer(true);
+      } catch (err) {
+        showToast('O lugar ficou salvo só neste navegador.');
+      } finally {
+        isSaving = false;
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => toast.classList.add('hidden'), 2600);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
+    }
+    function escapeAttr(value) { return escapeHtml(value); }
+    function escapeJs(value) { return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+  </script>
+</body>
+</html>
